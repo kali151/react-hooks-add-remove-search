@@ -12,25 +12,6 @@ const Ingredients = () => {
     setIngs(filteredIngs);
   }, [])
 
-  // useEffect(() => {
-  //   fetch('https://react-hooks-ddd68-default-rtdb.firebaseio.com/ingredients.json')
-  //   .then(response => response.json())
-  //   .then(responseData => {
-  //     const loadedIngs = [];
-  //     for (const key in responseData) {
-  //       loadedIngs.push({
-  //         id: key,
-  //         title: responseData[key].title,
-  //         amount: responseData[key].amount
-  //       });
-  //     }
-  //     setIngs(loadedIngs);
-  //   });
-  //   return () => {
-  //     //cleanup
-  //   }
-  // }, []);
-
   useEffect(() => {
     console.log('Rendering', ings);
   }, [ings]);
@@ -51,7 +32,11 @@ const Ingredients = () => {
   };
 
   const removeIngredientHandler = id => {
-    setIngs(prevIngs => prevIngs.filter(item => item.id !== id))
+    fetch(`https://react-hooks-ddd68-default-rtdb.firebaseio.com/ingredients/${id}.json`, {
+      method: 'DELETE'
+    }).then(response => {
+      setIngs(prevIngs => prevIngs.filter(item => item.id !== id))
+    })
   }
 
   return (
