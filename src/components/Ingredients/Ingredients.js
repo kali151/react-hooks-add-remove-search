@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useCallback} from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import IngredientForm from './IngredientForm';
 import Search from './Search';
@@ -6,7 +6,7 @@ import IngredientList from './IngredientList';
 
 const Ingredients = () => {
 
-  const [ ings, setIngs] = useState([]);
+  const [ings, setIngs] = useState([]);
 
   const filteredIngsHandler = useCallback(filteredIngs => {
     setIngs(filteredIngs);
@@ -59,7 +59,7 @@ const Ingredients = () => {
       <IngredientForm onAddIngredient={addIngredientHandler} />
 
       <section>
-        <Search onLoadIngs={filteredIngsHandler}/>
+        <Search onLoadIngs={filteredIngsHandler} />
         <IngredientList ingredients={ings} onRemoveItem={removeIngredientHandler} />
       </section>
     </div>
