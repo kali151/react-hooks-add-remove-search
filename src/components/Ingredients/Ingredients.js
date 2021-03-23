@@ -1,13 +1,27 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useReducer } from 'react';
 
 import IngredientForm from './IngredientForm';
 import Search from './Search';
 import IngredientList from './IngredientList';
 import ErrorModal from '../UI/ErrorModal';
 
-const Ingredients = () => {
+const ingredientReducer = (currentIng, action) => {
+  switch (action.type) {
+    case 'SET':
+      return action.ingredients;
+    case 'ADD':
+      return [...currentIng, action.ingredient]
+    case 'DELETE':
+      return currentIng.filter(ing => ing.id !== action.id)
+    default:
+      throw new Error('No')
+  }
+}
 
-  const [ings, setIngs] = useState([]);
+const Ingredients = () => {
+  const [ings, dispatch] = useReducer(ingredientReducer, []);
+
+  //const [ings, setIngs] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState();
 
@@ -16,7 +30,11 @@ const Ingredients = () => {
   }, [ings]);
 
   const filteredIngsHandler = useCallback(filteredIngs => {
-    setIngs(filteredIngs);
+    //setIngs(filteredIngs);
+    dispatch({
+      type: 'SET',
+      ingredients: filteredIngs
+    })
   }, [])
 
   const addIngredientHandler = ing => {
@@ -29,10 +47,14 @@ const Ingredients = () => {
       setIsLoading(false);
       return response.json();
     }).then(responseData => {
-      setIngs(prevIngs => [
-        ...prevIngs,
-        { id: responseData.name, ...ing }
-      ]);
+      dispatch({
+        type: 'ADD',
+        ingredient: { id: responseData.name, ...ing }
+      })
+      // setIngs(prevIngs => [
+      //   ...prevIngs,
+      //   { id: responseData.name, ...ing }
+      // ]);
     });
   };
 
@@ -42,7 +64,11 @@ const Ingredients = () => {
       method: 'DELETE'
     }).then(response => {
       setIsLoading(false);
-      setIngs(prevIngs => prevIngs.filter(item => item.id !== id))
+      dispatch({
+        type: 'DELETE',
+        id: id
+      })
+      // setIngs(prevIngs => prevIngs.filter(item => item.id !== id))
     }).catch(error => {
       setError("Smth went wrong!: ", error.message);
       setIsLoading(false);
