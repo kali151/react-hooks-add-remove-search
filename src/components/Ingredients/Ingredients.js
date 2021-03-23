@@ -4,6 +4,7 @@ import IngredientForm from './IngredientForm';
 import Search from './Search';
 import IngredientList from './IngredientList';
 import ErrorModal from '../UI/ErrorModal';
+import useCoco from '../../hooks/http';
 
 const ingredientReducer = (currentIng, action) => {
   switch (action.type) {
@@ -16,88 +17,86 @@ const ingredientReducer = (currentIng, action) => {
     default:
       throw new Error('No')
   }
-}
-
-const httpReducer = (httpState, action) => {
-  switch (action.type) {
-    case 'SEND':
-      return { loading: true, error: null };
-    case 'RESPONSE':
-      return {
-        ...httpState, loading: false
-      }
-    case 'ERROR':
-      return { loading: false, error: action.errorMessage }
-    case 'CLEAR_ERROR':
-      return { ...httpState, error: null }
-    default:
-      throw new Error('No')
-  }
-}
+};
 
 const Ingredients = () => {
   const [ings, dispatch] = useReducer(ingredientReducer, []);
-  const [httpState, dispatchHttp] = useReducer(httpReducer, { loading: false, error: null })
+  const {
+    isLoading,
+    error,
+    data,
+    sendRequest,
+    reqExtra,
+    reqIdentifier,
+    clear
+  } = useCoco();
 
   useEffect(() => {
-    console.log('Rendering', ings);
-  }, [ings]);
+    if (!isLoading && !error && reqIdentifier === 'REMOVE_INGREDIENT') {
+      dispatch({ type: 'DELETE', id: reqExtra });
+    } else if (!isLoading && !error && reqIdentifier === 'ADD_INGREDIENT') {
+      dispatch({
+        type: 'ADD',
+        ingredient: { id: data.name, ...reqExtra }
+      });
+    }
+    // console.log('Rendering ingrs', data);
+  }, [data, reqExtra, reqIdentifier, isLoading, error]);
 
   const filteredIngsHandler = useCallback(filteredIngs => {
     //setIngs(filteredIngs);
     dispatch({
       type: 'SET',
       ingredients: filteredIngs
-    })
-  }, [])
-
-  const addIngredientHandler = useCallback(ing => {
-    dispatchHttp({ type: 'SEND' });
-    // setIsLoading(true);
-    fetch('https://react-hooks-ddd68-default-rtdb.firebaseio.com/ingredients.json', {
-      method: 'POST',
-      body: JSON.stringify(ing),
-      headers: { 'Content-Type': 'application/json' }
-    }).then(response => {
-      dispatchHttp({ type: 'RESPONSE' });
-      // setIsLoading(false);
-      return response.json();
-    }).then(responseData => {
-      dispatch({
-        type: 'ADD',
-        ingredient: { id: responseData.name, ...ing }
-      })
-      // setIngs(prevIngs => [
-      //   ...prevIngs,
-      //   { id: responseData.name, ...ing }
-      // ]);
     });
   }, []);
 
-  const removeIngredientHandler = useCallback(id => {
-    dispatchHttp({ type: 'SEND' });
-    //setIsLoading(true);
-    fetch(`https://react-hooks-ddd68-default-rtdb.firebaseio.com/ingredients/${id}.json`, {
-      method: 'DELETE'
-    }).then(response => {
-      dispatchHttp({ type: 'RESPONSE' });
-      //setIsLoading(false);
-      dispatch({
-        type: 'DELETE',
-        id: id
-      })
-      // setIngs(prevIngs => prevIngs.filter(item => item.id !== id))
-    }).catch(error => {
-      dispatchHttp({ type: 'ERROR', errorMessage: error.message });
-      // setError("Smth went wrong!: ", error.message);
-      // setIsLoading(false);
-    })
-  }, []);
+  const addIngredientHandler = useCallback(ing => {
+    sendRequest(
+      'https://react-hooks-ddd68-default-rtdb.firebaseio.com/ingredients.json',
+      'POST',
+      JSON.stringify(ing),
+      ing,
+      'ADD_INGREDIENT'
+    );
+    // dispatchHttp({ type: 'SEND' });
+    // // setIsLoading(true);
+    // fetch('https://react-hooks-ddd68-default-rtdb.firebaseio.com/ingredients.json', {
+    //   method: 'POST',
+    //   body: JSON.stringify(ing),
+    //   headers: { 'Content-Type': 'application/json' }
+    // }).then(response => {
+    //   dispatchHttp({ type: 'RESPONSE' });
+    //   // setIsLoading(false);
+    //   return response.json();
+    // }).then(responseData => {
+    //   dispatch({
+    //     type: 'ADD',
+    //     ingredient: { id: responseData.name, ...ing }
+    //   })
+    //   // setIngs(prevIngs => [
+    //   //   ...prevIngs,
+    //   //   { id: responseData.name, ...ing }
+    //   // ]);
+    // });
+  }, [sendRequest]);
 
-  const clearError = useCallback(() => {
-    dispatchHttp({ type: 'CLEAR_ERROR' })
-    //setError(null);
-  }, []);
+  const removeIngredientHandler = useCallback(id => {
+    sendRequest(
+      `https://react-hooks-ddd68-default-rtdb.firebaseio.com/ingredients/${id}.json`,
+      'DELETE',
+      null,
+      id,
+      'REMOVE_INGREDIENT');
+    //dispatchHttp({ type: 'SEND' });
+    //setIsLoading(true);
+
+  }, [sendRequest]);
+
+  // const clearError = useCallback(() => {
+  //   sendRequest({ type: 'CLEAR_ERROR' })
+  //   //setError(null);
+  // }, [sendRequest]);
 
   const ingrList = useMemo(() => {
     return (
@@ -109,10 +108,10 @@ const Ingredients = () => {
 
   return (
     <div className="App">
-      {httpState.error && <ErrorModal onClose={clearError}>{httpState.error}</ErrorModal>}
+      {error && <ErrorModal onClose={clear}>{error}</ErrorModal>}
       <IngredientForm
         onAddIngredient={addIngredientHandler}
-        loading={httpState.loading} />
+        loading={isLoading} />
 
       <section>
         <Search onLoadIngs={filteredIngsHandler} />
