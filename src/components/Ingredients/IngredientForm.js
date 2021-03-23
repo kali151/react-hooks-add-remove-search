@@ -3,10 +3,12 @@ import React, { useState } from 'react';
 import Card from '../UI/Card';
 import './IngredientForm.css';
 import LoadingIndicator from '../UI/LoadingIndicator'
+
 const IngredientForm = React.memo(props => {
 
   const [enteredTitle, setEnteredTitle] = useState('');
   const [enteredAmount, setEnteredAmount] = useState('');
+  console.log('rendering ingr form');
 
   const submitHandler = event => {
     event.preventDefault();
