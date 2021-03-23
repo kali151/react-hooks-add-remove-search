@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useReducer } from 'react';
+import React, { useEffect, useCallback, useReducer } from 'react';
 
 import IngredientForm from './IngredientForm';
 import Search from './Search';
@@ -18,12 +18,26 @@ const ingredientReducer = (currentIng, action) => {
   }
 }
 
+const httpReducer = (httpState, action) => {
+  switch (action.type) {
+    case 'SEND':
+      return { loading: true, error: null };
+    case 'RESPONSE':
+      return {
+        ...httpState, loading: false
+      }
+    case 'ERROR':
+      return { loading: false, error: action.errorMessage }
+    case 'CLEAR_ERROR':
+      return { ...httpState, error: null }
+    default:
+      throw new Error('No')
+  }
+}
+
 const Ingredients = () => {
   const [ings, dispatch] = useReducer(ingredientReducer, []);
-
-  //const [ings, setIngs] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState();
+  const [httpState, dispatchHttp] = useReducer(httpReducer, { loading: false, error: null })
 
   useEffect(() => {
     console.log('Rendering', ings);
@@ -38,13 +52,15 @@ const Ingredients = () => {
   }, [])
 
   const addIngredientHandler = ing => {
-    setIsLoading(true);
+    dispatchHttp({ type: 'SEND' });
+    // setIsLoading(true);
     fetch('https://react-hooks-ddd68-default-rtdb.firebaseio.com/ingredients.json', {
       method: 'POST',
       body: JSON.stringify(ing),
       headers: { 'Content-Type': 'application/json' }
     }).then(response => {
-      setIsLoading(false);
+      dispatchHttp({ type: 'RESPONSE' });
+      // setIsLoading(false);
       return response.json();
     }).then(responseData => {
       dispatch({
@@ -59,32 +75,36 @@ const Ingredients = () => {
   };
 
   const removeIngredientHandler = id => {
-    setIsLoading(true);
+    dispatchHttp({ type: 'SEND' });
+    //setIsLoading(true);
     fetch(`https://react-hooks-ddd68-default-rtdb.firebaseio.com/ingredients/${id}.json`, {
       method: 'DELETE'
     }).then(response => {
-      setIsLoading(false);
+      dispatchHttp({ type: 'RESPONSE' });
+      //setIsLoading(false);
       dispatch({
         type: 'DELETE',
         id: id
       })
       // setIngs(prevIngs => prevIngs.filter(item => item.id !== id))
     }).catch(error => {
-      setError("Smth went wrong!: ", error.message);
-      setIsLoading(false);
+      dispatchHttp({ type: 'ERROR', errorMessage: error.message });
+      // setError("Smth went wrong!: ", error.message);
+      // setIsLoading(false);
     })
   }
 
   const clearError = () => {
-    setError(null);
+    dispatchHttp({ type: 'CLEAR_ERROR' })
+    //setError(null);
   }
 
   return (
     <div className="App">
-      {error && <ErrorModal onClose={clearError}>{error}</ErrorModal>}
+      {httpState.error && <ErrorModal onClose={clearError}>{httpState.error}</ErrorModal>}
       <IngredientForm
         onAddIngredient={addIngredientHandler}
-        loading={isLoading} />
+        loading={httpState.loading} />
 
       <section>
         <Search onLoadIngs={filteredIngsHandler} />
