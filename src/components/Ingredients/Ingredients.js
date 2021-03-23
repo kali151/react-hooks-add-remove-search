@@ -44,7 +44,6 @@ const Ingredients = () => {
   }, [data, reqExtra, reqIdentifier, isLoading, error]);
 
   const filteredIngsHandler = useCallback(filteredIngs => {
-    //setIngs(filteredIngs);
     dispatch({
       type: 'SET',
       ingredients: filteredIngs
@@ -59,26 +58,6 @@ const Ingredients = () => {
       ing,
       'ADD_INGREDIENT'
     );
-    // dispatchHttp({ type: 'SEND' });
-    // // setIsLoading(true);
-    // fetch('https://react-hooks-ddd68-default-rtdb.firebaseio.com/ingredients.json', {
-    //   method: 'POST',
-    //   body: JSON.stringify(ing),
-    //   headers: { 'Content-Type': 'application/json' }
-    // }).then(response => {
-    //   dispatchHttp({ type: 'RESPONSE' });
-    //   // setIsLoading(false);
-    //   return response.json();
-    // }).then(responseData => {
-    //   dispatch({
-    //     type: 'ADD',
-    //     ingredient: { id: responseData.name, ...ing }
-    //   })
-    //   // setIngs(prevIngs => [
-    //   //   ...prevIngs,
-    //   //   { id: responseData.name, ...ing }
-    //   // ]);
-    // });
   }, [sendRequest]);
 
   const removeIngredientHandler = useCallback(id => {
@@ -88,15 +67,7 @@ const Ingredients = () => {
       null,
       id,
       'REMOVE_INGREDIENT');
-    //dispatchHttp({ type: 'SEND' });
-    //setIsLoading(true);
-
   }, [sendRequest]);
-
-  // const clearError = useCallback(() => {
-  //   sendRequest({ type: 'CLEAR_ERROR' })
-  //   //setError(null);
-  // }, [sendRequest]);
 
   const ingrList = useMemo(() => {
     return (

@@ -30,7 +30,7 @@ const httpReducer = (httpState, action) => {
         case 'CLEAR':
             return initialState;
         default:
-            throw new Error('No')
+            throw new Error('You shall not pass here')
     }
 };
 
